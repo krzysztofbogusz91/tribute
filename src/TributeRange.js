@@ -179,9 +179,9 @@ class TributeRange {
     }
 
     getWindowSelection() {
-        if (this.tribute.collection.iframe) {
-            return this.tribute.collection.iframe.contentWindow.getSelection()
-        }
+      if (this.tribute.iframe) {
+        return this.tribute.iframe.contentWindow.getSelection();
+      }
 
         return window.getSelection()
     }
@@ -521,7 +521,21 @@ class TributeRange {
 
         let rect = range.getBoundingClientRect()
 
-        return this.getFixedCoordinatesRelativeToRect(rect);
+        let iframeRect;
+        let rect2 = {};
+        if(this.tribute.iframe){
+          iframeRect = this.tribute.iframe.getBoundingClientRect();
+          rect2.x = rect.x + iframeRect.x;
+          rect2.y = rect.y + iframeRect.y;
+          rect2.top = rect.top + iframeRect.top;
+          rect2.bottom = rect.bottom + iframeRect.bottom;
+          rect2.width = rect.width ;
+          rect2.height = rect.height;
+          rect2.left = rect.left + iframeRect.left ;
+          rect2.right = rect.right + iframeRect.right;
+        }
+    
+        return this.getFixedCoordinatesRelativeToRect(this.tribute.iframe ? rect2 : rect);
     }
 
     getFixedCoordinatesRelativeToRect(rect) {
