@@ -570,17 +570,7 @@
     _createClass(TributeRange, [{
       key: "getDocument",
       value: function getDocument() {
-        var iframe;
-
-        if (this.tribute.current.collection) {
-          iframe = this.tribute.current.collection.iframe;
-        }
-
-        if (!iframe) {
-          return document;
-        }
-
-        return iframe.contentWindow.document;
+        return document;
       }
     }, {
       key: "positionMenuAtCaret",

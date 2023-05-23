@@ -33,6 +33,7 @@ class TributeMenuEvents {
     this.tribute.range
       .getDocument()
       .addEventListener("mousedown", this.menuClickEvent, false);
+
     window.addEventListener("resize", this.windowResizeEvent);
 
     if (this.menuContainer) {

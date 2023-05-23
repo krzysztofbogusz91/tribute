@@ -446,6 +446,7 @@ class TributeMenuEvents {
     this.tribute.range
       .getDocument()
       .addEventListener("mousedown", this.menuClickEvent, false);
+
     window.addEventListener("resize", this.windowResizeEvent);
 
     if (this.menuContainer) {
@@ -505,16 +506,7 @@ class TributeRange {
     }
 
     getDocument() {
-        let iframe;
-        if (this.tribute.current.collection) {
-            iframe = this.tribute.current.collection.iframe;
-        }
-
-        if (!iframe) {
-            return document
-        }
-
-        return iframe.contentWindow.document
+        return document;
     }
 
     positionMenuAtCaret(scrollTo) {
