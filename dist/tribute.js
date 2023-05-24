@@ -83,33 +83,50 @@
   }
 
   if (!Array.prototype.find) {
-    Array.prototype.find = function (predicate) {
-      if (this === null) {
-        throw new TypeError('Array.prototype.find called on null or undefined');
-      }
-
-      if (typeof predicate !== 'function') {
-        throw new TypeError('predicate must be a function');
-      }
-
-      var list = Object(this);
-      var length = list.length >>> 0;
-      var thisArg = arguments[1];
-      var value;
-
-      for (var i = 0; i < length; i++) {
-        value = list[i];
-
-        if (predicate.call(thisArg, value, i, list)) {
-          return value;
+    Object.defineProperty(Array.prototype, 'find', {
+      value: function value(predicate) {
+        // 1. Let O be ? ToObject(this value).
+        if (this == null) {
+          throw TypeError('"this" is null or not defined');
         }
-      }
 
-      return undefined;
-    };
+        var o = Object(this); // 2. Let len be ? ToLength(? Get(O, "length")).
+
+        var len = o.length >>> 0; // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+
+        if (typeof predicate !== 'function') {
+          throw TypeError('predicate must be a function');
+        } // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
+
+
+        var thisArg = arguments[1]; // 5. Let k be 0.
+
+        var k = 0; // 6. Repeat, while k < len
+
+        while (k < len) {
+          // a. Let Pk be ! ToString(k).
+          // b. Let kValue be ? Get(O, Pk).
+          // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
+          // d. If testResult is true, return kValue.
+          var kValue = o[k];
+
+          if (predicate.call(thisArg, kValue, k, o)) {
+            return kValue;
+          } // e. Increase k by 1.
+
+
+          k++;
+        } // 7. Return undefined.
+
+
+        return undefined;
+      },
+      configurable: true,
+      writable: true
+    });
   }
 
-  if (window && typeof window.CustomEvent !== "function") {
+  if (typeof window !== 'undefined' && typeof window.CustomEvent !== "function") {
     var CustomEvent$1 = function CustomEvent(event, params) {
       params = params || {
         bubbles: false,
@@ -142,16 +159,16 @@
         element.boundKeydown = this.keydown.bind(element, this);
         element.boundKeyup = this.keyup.bind(element, this);
         element.boundInput = this.input.bind(element, this);
-        element.addEventListener("keydown", element.boundKeydown, false);
-        element.addEventListener("keyup", element.boundKeyup, false);
-        element.addEventListener("input", element.boundInput, false);
+        element.addEventListener("keydown", element.boundKeydown, true);
+        element.addEventListener("keyup", element.boundKeyup, true);
+        element.addEventListener("input", element.boundInput, true);
       }
     }, {
       key: "unbind",
       value: function unbind(element) {
-        element.removeEventListener("keydown", element.boundKeydown, false);
-        element.removeEventListener("keyup", element.boundKeyup, false);
-        element.removeEventListener("input", element.boundInput, false);
+        element.removeEventListener("keydown", element.boundKeydown, true);
+        element.removeEventListener("keyup", element.boundKeyup, true);
+        element.removeEventListener("input", element.boundInput, true);
         delete element.boundKeydown;
         delete element.boundKeyup;
         delete element.boundInput;
@@ -214,7 +231,7 @@
         }
 
         instance.updateSelection(this);
-        if (event.keyCode === 27) return;
+        if (!event.keyCode || event.keyCode === 27) return;
 
         if (!instance.tribute.allowSpaces && instance.tribute.hasTrailingSpace) {
           instance.tribute.hasTrailingSpace = false;
@@ -553,17 +570,7 @@
     _createClass(TributeRange, [{
       key: "getDocument",
       value: function getDocument() {
-        var iframe;
-
-        if (this.tribute.current.collection) {
-          iframe = this.tribute.current.collection.iframe;
-        }
-
-        if (!iframe) {
-          return document;
-        }
-
-        return iframe.contentWindow.document;
+        return document;
       }
     }, {
       key: "positionMenuAtCaret",
@@ -658,7 +665,7 @@
             var textSuffix = typeof this.tribute.replaceTextSuffix == 'string' ? this.tribute.replaceTextSuffix : ' ';
             text += textSuffix;
             var startPos = info.mentionPosition;
-            var endPos = info.mentionPosition + info.mentionText.length + textSuffix.length;
+            var endPos = info.mentionPosition + info.mentionText.length + (textSuffix === '' ? 1 : textSuffix.length);
 
             if (!this.tribute.autocompleteMode) {
               endPos += info.mentionTriggerChar.length - 1;
@@ -720,8 +727,8 @@
     }, {
       key: "getWindowSelection",
       value: function getWindowSelection() {
-        if (this.tribute.collection.iframe) {
-          return this.tribute.collection.iframe.contentWindow.getSelection();
+        if (this.tribute.iframe) {
+          return this.tribute.iframe.contentWindow.getSelection();
         }
 
         return window.getSelection();
@@ -807,8 +814,6 @@
     }, {
       key: "getLastWordInText",
       value: function getLastWordInText(text) {
-        text = text.replace(/\u00A0/g, ' '); // https://stackoverflow.com/questions/29850407/how-do-i-replace-unicode-character-u00a0-with-a-space-in-javascript
-
         var wordsArray;
 
         if (this.tribute.autocompleteSeparator) {
@@ -817,8 +822,8 @@
           wordsArray = text.split(/\s+/);
         }
 
-        var worldsCount = wordsArray.length - 1;
-        return wordsArray[worldsCount].trim();
+        var wordsCount = wordsArray.length - 1;
+        return wordsArray[wordsCount];
       }
     }, {
       key: "getTriggerInfo",
@@ -867,7 +872,7 @@
             }
           });
 
-          if (mostRecentTriggerCharPos >= 0 && (mostRecentTriggerCharPos === 0 || !requireLeadingSpace || /[\xA0\s]/g.test(effectiveRange.substring(mostRecentTriggerCharPos - 1, mostRecentTriggerCharPos)))) {
+          if (mostRecentTriggerCharPos >= 0 && (mostRecentTriggerCharPos === 0 || !requireLeadingSpace || /\s/.test(effectiveRange.substring(mostRecentTriggerCharPos - 1, mostRecentTriggerCharPos)))) {
             var currentTriggerSnippet = effectiveRange.substring(mostRecentTriggerCharPos + triggerChar.length, effectiveRange.length);
             triggerChar = effectiveRange.substring(mostRecentTriggerCharPos, mostRecentTriggerCharPos + triggerChar.length);
             var firstSnippetChar = currentTriggerSnippet.substring(0, 1);
@@ -1020,6 +1025,27 @@
         return this.getFixedCoordinatesRelativeToRect(spanRect);
       }
     }, {
+      key: "generateClientRect",
+      value: function generateClientRect(range) {
+        var rect = range.getBoundingClientRect();
+
+        if (!this.tribute.iframe) {
+          return rect;
+        }
+
+        var iframeRect = this.tribute.iframe.getBoundingClientRect();
+        return {
+          x: rect.x + iframeRect.x,
+          y: rect.y + iframeRect.y,
+          top: rect.top + iframeRect.top,
+          bottom: rect.bottom + iframeRect.bottom,
+          width: rect.width,
+          height: rect.height,
+          left: rect.left + iframeRect.left,
+          right: rect.right + iframeRect.right
+        };
+      }
+    }, {
       key: "getContentEditableCaretPosition",
       value: function getContentEditableCaretPosition(selectedNodePosition) {
         var range;
@@ -1028,7 +1054,7 @@
         range.setStart(sel.anchorNode, selectedNodePosition);
         range.setEnd(sel.anchorNode, selectedNodePosition);
         range.collapse(false);
-        var rect = range.getBoundingClientRect();
+        var rect = this.generateClientRect(range);
         return this.getFixedCoordinatesRelativeToRect(rect);
       }
     }, {
@@ -1352,6 +1378,7 @@
       this.menuSelected = 0;
       this.current = {};
       this.inputEvent = false;
+      this.iframe = iframe;
       this.isActive = false;
       this.menuContainer = menuContainer;
       this.allowSpaces = allowSpaces;
@@ -1500,10 +1527,8 @@
       key: "ensureEditable",
       value: function ensureEditable(element) {
         if (Tribute.inputTypes().indexOf(element.nodeName) === -1) {
-          if (element.contentEditable) {
-            element.contentEditable = true;
-          } else {
-            throw new Error("[Tribute] Cannot bind to " + element.nodeName);
+          if (!element.contentEditable) {
+            throw new Error("[Tribute] Cannot bind to " + element.nodeName + ", not contentEditable");
           }
         }
       }

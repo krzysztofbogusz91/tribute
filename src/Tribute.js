@@ -36,6 +36,7 @@ class Tribute {
     this.menuSelected = 0;
     this.current = {};
     this.inputEvent = false;
+    this.iframe = iframe;
     this.isActive = false;
     this.menuContainer = menuContainer;
     this.allowSpaces = allowSpaces;

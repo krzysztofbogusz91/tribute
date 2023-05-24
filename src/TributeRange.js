@@ -8,16 +8,7 @@ class TributeRange {
     }
 
     getDocument() {
-        let iframe
-        if (this.tribute.current.collection) {
-            iframe = this.tribute.current.collection.iframe
-        }
-
-        if (!iframe) {
-            return document
-        }
-
-        return iframe.contentWindow.document
+        return document;
     }
 
     positionMenuAtCaret(scrollTo) {
@@ -179,9 +170,9 @@ class TributeRange {
     }
 
     getWindowSelection() {
-        if (this.tribute.collection.iframe) {
-            return this.tribute.collection.iframe.contentWindow.getSelection()
-        }
+      if (this.tribute.iframe) {
+        return this.tribute.iframe.contentWindow.getSelection();
+      }
 
         return window.getSelection()
     }
@@ -509,18 +500,39 @@ class TributeRange {
         return this.getFixedCoordinatesRelativeToRect(spanRect);
     }
 
+    generateClientRect(range) {
+        const rect = range.getBoundingClientRect();
+
+        if (!this.tribute.iframe) {
+          return rect;
+        }
+
+        const iframeRect = this.tribute.iframe.getBoundingClientRect();
+
+        return {
+          x: rect.x + iframeRect.x,
+          y: rect.y + iframeRect.y,
+          top: rect.top + iframeRect.top,
+          bottom: rect.bottom + iframeRect.bottom,
+          width: rect.width,
+          height: rect.height,
+          left: rect.left + iframeRect.left,
+          right: rect.right + iframeRect.right,
+        };
+    }
+
     getContentEditableCaretPosition(selectedNodePosition) {
         let range
         let sel = this.getWindowSelection()
-
         range = this.getDocument().createRange()
         range.setStart(sel.anchorNode, selectedNodePosition)
         range.setEnd(sel.anchorNode, selectedNodePosition)
 
         range.collapse(false)
 
-        let rect = range.getBoundingClientRect()
+        let rect = this.generateClientRect(range)
 
+    
         return this.getFixedCoordinatesRelativeToRect(rect);
     }
 
@@ -568,7 +580,6 @@ class TributeRange {
             }
           }
         }
-
         return coordinates
     }
 
