@@ -44,7 +44,6 @@ class Tribute {
     this.positionMenu = positionMenu;
     this.hasTrailingSpace = false;
     this.spaceSelectsMatch = spaceSelectsMatch;
-    this.loadingItemTemplate = loadingItemTemplate;
 
     if (this.autocompleteMode) {
       trigger = "";

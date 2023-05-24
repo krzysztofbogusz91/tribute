@@ -500,33 +500,40 @@ class TributeRange {
         return this.getFixedCoordinatesRelativeToRect(spanRect);
     }
 
+    generateClientRect(range) {
+        const rect = range.getBoundingClientRect();
+
+        if (!this.tribute.iframe) {
+          return rect;
+        }
+
+        const iframeRect = this.tribute.iframe.getBoundingClientRect();
+
+        return {
+          x: rect.x + iframeRect.x,
+          y: rect.y + iframeRect.y,
+          top: rect.top + iframeRect.top,
+          bottom: rect.bottom + iframeRect.bottom,
+          width: rect.width,
+          height: rect.height,
+          left: rect.left + iframeRect.left,
+          right: rect.right + iframeRect.right,
+        };
+    }
+
     getContentEditableCaretPosition(selectedNodePosition) {
         let range
         let sel = this.getWindowSelection()
-
         range = this.getDocument().createRange()
         range.setStart(sel.anchorNode, selectedNodePosition)
         range.setEnd(sel.anchorNode, selectedNodePosition)
 
         range.collapse(false)
 
-        let rect = range.getBoundingClientRect()
+        let rect = this.generateClientRect(range)
 
-        let iframeRect;
-        let rect2 = {};
-        if(this.tribute.iframe){
-          iframeRect = this.tribute.iframe.getBoundingClientRect();
-          rect2.x = rect.x + iframeRect.x;
-          rect2.y = rect.y + iframeRect.y;
-          rect2.top = rect.top + iframeRect.top;
-          rect2.bottom = rect.bottom + iframeRect.bottom;
-          rect2.width = rect.width ;
-          rect2.height = rect.height;
-          rect2.left = rect.left + iframeRect.left ;
-          rect2.right = rect.right + iframeRect.right;
-        }
     
-        return this.getFixedCoordinatesRelativeToRect(this.tribute.iframe ? rect2 : rect);
+        return this.getFixedCoordinatesRelativeToRect(rect);
     }
 
     getFixedCoordinatesRelativeToRect(rect) {
@@ -573,7 +580,6 @@ class TributeRange {
             }
           }
         }
-
         return coordinates
     }
 
